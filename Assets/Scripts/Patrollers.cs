@@ -37,7 +37,7 @@ public class Patrollers : MonoBehaviour
         myNavMeshAgent.SetDestination(newDestination);
     }
 
-    void SetDestinationToMousePosition()
+    /*void SetDestinationToMousePosition()
     {
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -45,5 +45,5 @@ public class Patrollers : MonoBehaviour
         {
             myNavMeshAgent.SetDestination(hit.point);
         }
-    }
+    }*/
 }

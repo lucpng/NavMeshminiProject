@@ -34,12 +34,14 @@ public class GameManager : MonoBehaviour
         
     }
 
-    public Vector3 getEntryLocation(int index)
+    public Transform GetAttractionById(int index)
+    {
+        return attractionList.transform.GetChild(index);
+    }
+
+    public bool attractionIsFull(int index)
     {
         var target = attractionList.transform.GetChild(index);
-        var targetEntry = target.Find("Entry");
-        
-        //Vector3 nullVec = new Vector3(0.0f, 0.0f, 0.0f);
-        return targetEntry.transform.position;
-    }
+        return target.GetComponent<Attraction>().full;
+    }  
 }
