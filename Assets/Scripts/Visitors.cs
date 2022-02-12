@@ -9,6 +9,7 @@ public class Visitors : MonoBehaviour
         atAttractionEntry,
         inQueue,
         inAttraction,
+        goingInQueue,
     }
     public visitorStates state;
     NavMeshAgent myNavMeshAgent;
@@ -17,9 +18,8 @@ public class Visitors : MonoBehaviour
     private int target;
     private float attractionTime;
     public int NBR_ATTRACTION;
-    private bool observingQueue = false;
-
-
+    //private bool observingQueue = false;
+    public Visitors previousVisitor;
 
 
     void Start()
@@ -31,6 +31,8 @@ public class Visitors : MonoBehaviour
 
     void Update()
     {
+        var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
+        var attraction = gm.GetAttractionById(target);
         switch (state)
         {
             case visitorStates.walking:
@@ -38,20 +40,67 @@ public class Visitors : MonoBehaviour
                 {
                     SetDestinationAttraction();
                 }
+                if (myNavMeshAgent.remainingDistance < 1)
+                {
+                    state = visitorStates.atAttractionEntry;
+                }
+                break;
+            case visitorStates.goingInQueue:
+                if (myNavMeshAgent.remainingDistance < 2)
+                {
+                    myNavMeshAgent.isStopped = true;
+                    EnqueVisitor();
+                    state = visitorStates.inQueue;
+                }
                 break;
             case visitorStates.atAttractionEntry:
-                var gm = GameObject.Find("GameManager").GetComponent<GameManager>();            
-                if (!gm.attractionIsFull(target))
+                if (!attraction.GetComponent<Attraction>().QueueIsEmpty()) // TODO HERE ________________
                 {
-                    EnterAttraction();
-                    state = visitorStates.inAttraction;
-                }           
+                    if (!gm.AttractionIsFull(target) && this == attraction.GetComponent<Attraction>().getFirstInQueue())
+                    {
+                        EnterAttraction();
+                        state = visitorStates.inAttraction;
+                    }
+                }
+                else
+                {
+                    if (!gm.AttractionIsFull(target))
+                    {
+                        EnterAttraction();
+                    }
+                }
+                break;
+
+            case visitorStates.inQueue:
+                if (previousVisitor)
+                {
+                    if (previousVisitor.state == visitorStates.inAttraction)
+                    {
+                        var attractionEntry = attraction.Find("Entry");
+                        myNavMeshAgent.SetDestination(attractionEntry.transform.position);
+                        previousVisitor = null;
+                    }
+                    else if (myNavMeshAgent.remainingDistance < 2)
+                    {
+                        myNavMeshAgent.isStopped = true;
+                    }
+                    else
+                    {
+                        myNavMeshAgent.SetDestination(previousVisitor.transform.position);
+                    }
+                }
+                else
+                {
+                    if (myNavMeshAgent.remainingDistance < 1)
+                    {
+                        state = visitorStates.atAttractionEntry;
+                    }
+                }
                 break;
             case visitorStates.inAttraction:
                 attractionTime -= Time.deltaTime;
                 if (attractionTime <= 0)
                 {
-                    Debug.Log(attractionTime);
                     ExitAttraction();
                     state = visitorStates.walking;
                 }         
@@ -66,20 +115,23 @@ public class Visitors : MonoBehaviour
         target = Random.Range(0, NBR_ATTRACTION);
         var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         var attraction = gm.GetAttractionById(target);
-        if (attraction.GetComponent<Attraction>().full)
+        if (attraction.GetComponent<Attraction>().full && !attraction.GetComponent<Attraction>().QueueIsEmpty())
         {
+            Debug.Log("Here");
             myNavMeshAgent.SetDestination(attraction.GetComponent<Attraction>().LastPosInQueue());
-            observingQueue = true;
+            state = visitorStates.goingInQueue;
+            //observingQueue = true;
         }
         else
         {
+            Debug.Log("There");
             var attractionEntry = attraction.Find("Entry");
             if (attractionEntry != null)
             {
-                myNavMeshAgent.SetDestination(attractionEntry.transform.position);
-                attraction.GetComponent<Attraction>().AddVisitorArriving(this);
+                myNavMeshAgent.SetDestination(attractionEntry.transform.position);                
             }
         }
+        attraction.GetComponent<Attraction>().AddVisitorArriving(this);
     }
 
     void EnterAttraction()
@@ -110,9 +162,20 @@ public class Visitors : MonoBehaviour
         }
 
     }
+    void EnqueVisitor()
+    {
+        var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
+        var attraction = gm.GetAttractionById(target);
+        attraction.GetComponent<Attraction>().Enqueue(this);
+    }
 
-    public void updatesAboutQueue(Vector3 newLastPosInQueue)
+    public void UpdatesAboutQueue(Vector3 newLastPosInQueue)
     {
         myNavMeshAgent.SetDestination(newLastPosInQueue);
+        state = visitorStates.goingInQueue;
+    }
+
+    public void SetVisitorBefore(Visitors visitor){
+        previousVisitor = visitor;
     }
 }

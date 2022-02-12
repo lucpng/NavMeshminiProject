@@ -39,9 +39,9 @@ public class GameManager : MonoBehaviour
         return attractionList.transform.GetChild(index);
     }
 
-    public bool attractionIsFull(int index)
+    public bool AttractionIsFull(int index)
     {
         var target = attractionList.transform.GetChild(index);
-        return target.GetComponent<Attraction>().full;
+        return target.GetComponent<Attraction>().isFull();
     }  
 }
