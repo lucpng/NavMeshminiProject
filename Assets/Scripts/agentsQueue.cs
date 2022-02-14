@@ -16,7 +16,6 @@ public class AgentsQueue
 
     public void AddArriving(Visitors visitor)
     {
-        Debug.Log("Bonjour");
         visitorsArriving.Add(visitor);
     }
 
@@ -26,7 +25,7 @@ public class AgentsQueue
         visitorsInQueue.Enqueue(visitor);
         if (last)
         {
-            visitor.SetVisitorBefore(last);
+            visitor.SetPreviousVisitor(last);
         }
         
         last = visitor;
@@ -51,14 +50,18 @@ public class AgentsQueue
 
     public bool QueueIsEmpty()
     {
+
         if (visitorsInQueue.Count > 0)
         {
+            
             return false;
         }
         else
         {
             return true;
         }
+
+        
     }
 
     public Visitors Peek()

@@ -9,7 +9,6 @@ public class Visitors : MonoBehaviour
         atAttractionEntry,
         inQueue,
         inAttraction,
-        goingInQueue,
     }
     public visitorStates state;
     NavMeshAgent myNavMeshAgent;
@@ -18,13 +17,14 @@ public class Visitors : MonoBehaviour
     private int target;
     private float attractionTime;
     public int NBR_ATTRACTION;
-    //private bool observingQueue = false;
+    private bool observingQueue = false;
     public Visitors previousVisitor;
 
 
     void Start()
     {
         myNavMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        SetNewDestination();
         state = visitorStates.walking;
         path = new NavMeshPath();
     }
@@ -36,65 +36,47 @@ public class Visitors : MonoBehaviour
         switch (state)
         {
             case visitorStates.walking:
-                if (!myNavMeshAgent.hasPath)
-                {
-                    SetDestinationAttraction();
-                }
+                if (myNavMeshAgent.pathPending)
+                    break;
+                //Debug.Log("Distance to objectif = " + myNavMeshAgent.remainingDistance);
                 if (myNavMeshAgent.remainingDistance < 1)
                 {
-                    state = visitorStates.atAttractionEntry;
-                }
-                break;
-            case visitorStates.goingInQueue:
-                if (myNavMeshAgent.remainingDistance < 2)
-                {
-                    myNavMeshAgent.isStopped = true;
+                   
                     EnqueVisitor();
                     state = visitorStates.inQueue;
                 }
                 break;
             case visitorStates.atAttractionEntry:
-                if (!attraction.GetComponent<Attraction>().QueueIsEmpty()) // TODO HERE ________________
+                observingQueue = false;
+                if (!gm.AttractionIsFull(target))
                 {
-                    if (!gm.AttractionIsFull(target) && this == attraction.GetComponent<Attraction>().getFirstInQueue())
-                    {
-                        EnterAttraction();
-                        state = visitorStates.inAttraction;
-                    }
-                }
-                else
-                {
-                    if (!gm.AttractionIsFull(target))
-                    {
-                        EnterAttraction();
-                    }
+                    EnterAttraction();
+                    state = visitorStates.inAttraction;
                 }
                 break;
-
             case visitorStates.inQueue:
                 if (previousVisitor)
                 {
                     if (previousVisitor.state == visitorStates.inAttraction)
                     {
                         var attractionEntry = attraction.Find("Entry");
+                        myNavMeshAgent.isStopped = false;
                         myNavMeshAgent.SetDestination(attractionEntry.transform.position);
                         previousVisitor = null;
                     }
-                    else if (myNavMeshAgent.remainingDistance < 2)
+                    else if (myNavMeshAgent.remainingDistance < 1)
                     {
                         myNavMeshAgent.isStopped = true;
                     }
                     else
                     {
+                        myNavMeshAgent.isStopped = false;
                         myNavMeshAgent.SetDestination(previousVisitor.transform.position);
                     }
                 }
                 else
                 {
-                    if (myNavMeshAgent.remainingDistance < 1)
-                    {
-                        state = visitorStates.atAttractionEntry;
-                    }
+                    state = visitorStates.atAttractionEntry;
                 }
                 break;
             case visitorStates.inAttraction:
@@ -110,25 +92,22 @@ public class Visitors : MonoBehaviour
         
     }
 
-    void SetDestinationAttraction()
+    void SetNewDestination()
     {
         target = Random.Range(0, NBR_ATTRACTION);
         var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         var attraction = gm.GetAttractionById(target);
-        if (attraction.GetComponent<Attraction>().full && !attraction.GetComponent<Attraction>().QueueIsEmpty())
+        observingQueue = true;
+        if (!attraction.GetComponent<Attraction>().QueueIsEmpty())
         {
-            Debug.Log("Here");
             myNavMeshAgent.SetDestination(attraction.GetComponent<Attraction>().LastPosInQueue());
-            state = visitorStates.goingInQueue;
-            //observingQueue = true;
         }
         else
         {
-            Debug.Log("There");
             var attractionEntry = attraction.Find("Entry");
             if (attractionEntry != null)
             {
-                myNavMeshAgent.SetDestination(attractionEntry.transform.position);                
+                myNavMeshAgent.SetDestination(attractionEntry.transform.position);
             }
         }
         attraction.GetComponent<Attraction>().AddVisitorArriving(this);
@@ -157,7 +136,7 @@ public class Visitors : MonoBehaviour
             myNavMeshAgent.transform.position = attractionExit.transform.position;
             myNavMeshAgent.GetComponent<MeshRenderer>().enabled = true;
             myNavMeshAgent.GetComponent<NavMeshAgent>().enabled = true;
-            SetDestinationAttraction();
+            SetNewDestination();
             attraction.GetComponent<Attraction>().DecrementUsersAttraction();
         }
 
@@ -171,11 +150,13 @@ public class Visitors : MonoBehaviour
 
     public void UpdatesAboutQueue(Vector3 newLastPosInQueue)
     {
-        myNavMeshAgent.SetDestination(newLastPosInQueue);
-        state = visitorStates.goingInQueue;
+        if (observingQueue)
+        {
+            myNavMeshAgent.SetDestination(newLastPosInQueue);
+        }
     }
 
-    public void SetVisitorBefore(Visitors visitor){
+    public void SetPreviousVisitor(Visitors visitor){
         previousVisitor = visitor;
     }
 }
