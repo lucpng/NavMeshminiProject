@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 885047029218136324}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2.3965, y: 2.3965, z: 2.3965}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4506025300157790451}
@@ -85,6 +85,8 @@ MonoBehaviour:
   capacity: 1
   users: 0
   full: 0
+  entrance: {fileID: 6497861720410253433}
+  exit: {fileID: 3699634258174798584}
 --- !u!1 &3699634258174798584
 GameObject:
   m_ObjectHideFlags: 0
@@ -126,7 +128,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6851876845090049661}
   m_Layer: 0
-  m_Name: Entry
+  m_Name: Entrance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -6,17 +6,15 @@ public class Visitors : MonoBehaviour
     public enum visitorStates
     {
         walking,
-        atAttractionEntry,
+        atAttractionEntrance,
         inQueue,
         inAttraction,
     }
     public visitorStates state;
     NavMeshAgent myNavMeshAgent;
-    private bool hasDestination;
-    private NavMeshPath path;
-    private int target;
+    private Attraction targetedAttraction;
     private float attractionTime;
-    public int NBR_ATTRACTION;
+    public static int NBR_ATTRACTION = 4;
     private bool observingQueue = false;
     public Visitors previousVisitor;
 
@@ -26,19 +24,16 @@ public class Visitors : MonoBehaviour
         myNavMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         SetNewDestination();
         state = visitorStates.walking;
-        path = new NavMeshPath();
     }
 
     void Update()
     {
-        var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        var attraction = gm.GetAttractionById(target);
         switch (state)
         {
             case visitorStates.walking:
                 if (myNavMeshAgent.pathPending)
                     break;
-                //Debug.Log("Distance to objectif = " + myNavMeshAgent.remainingDistance);
+
                 if (myNavMeshAgent.remainingDistance < 1)
                 {
                    
@@ -46,9 +41,9 @@ public class Visitors : MonoBehaviour
                     state = visitorStates.inQueue;
                 }
                 break;
-            case visitorStates.atAttractionEntry:
+            case visitorStates.atAttractionEntrance:
                 observingQueue = false;
-                if (!gm.AttractionIsFull(target))
+                if (!targetedAttraction.full)
                 {
                     EnterAttraction();
                     state = visitorStates.inAttraction;
@@ -59,9 +54,8 @@ public class Visitors : MonoBehaviour
                 {
                     if (previousVisitor.state == visitorStates.inAttraction)
                     {
-                        var attractionEntry = attraction.Find("Entry");
                         myNavMeshAgent.isStopped = false;
-                        myNavMeshAgent.SetDestination(attractionEntry.transform.position);
+                        myNavMeshAgent.SetDestination(targetedAttraction.entrance.transform.position);
                         previousVisitor = null;
                     }
                     else if (myNavMeshAgent.remainingDistance < 1)
@@ -76,7 +70,7 @@ public class Visitors : MonoBehaviour
                 }
                 else
                 {
-                    state = visitorStates.atAttractionEntry;
+                    state = visitorStates.atAttractionEntrance;
                 }
                 break;
             case visitorStates.inAttraction:
@@ -94,69 +88,54 @@ public class Visitors : MonoBehaviour
 
     void SetNewDestination()
     {
-        target = Random.Range(0, NBR_ATTRACTION);
+        var targetID = Random.Range(0, NBR_ATTRACTION);
         var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        var attraction = gm.GetAttractionById(target);
+        targetedAttraction = gm.GetAttractionById(targetID).GetComponent<Attraction>();
         observingQueue = true;
-        if (!attraction.GetComponent<Attraction>().QueueIsEmpty())
+        if (!targetedAttraction.QueueIsEmpty())
         {
-            myNavMeshAgent.SetDestination(attraction.GetComponent<Attraction>().LastPosInQueue());
+            myNavMeshAgent.SetDestination(targetedAttraction.LastPosInQueue());
         }
         else
         {
-            var attractionEntry = attraction.Find("Entry");
-            if (attractionEntry != null)
+            var attractionEntrance = targetedAttraction.entrance;
+            if (attractionEntrance != null)
             {
-                myNavMeshAgent.SetDestination(attractionEntry.transform.position);
+                myNavMeshAgent.SetDestination(attractionEntrance.transform.position);
             }
         }
-        attraction.GetComponent<Attraction>().AddVisitorArriving(this);
+        targetedAttraction.AddComingVisitor(this);
     }
 
     void EnterAttraction()
     {
-        var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        var attraction = gm.GetAttractionById(target);
-        if (attraction != null)
+        if (targetedAttraction != null)
         {
             myNavMeshAgent.GetComponent<MeshRenderer>().enabled = false;
             myNavMeshAgent.GetComponent<NavMeshAgent>().enabled = false;
-            attractionTime = attraction.GetComponent<Attraction>().duration;
-            attraction.GetComponent<Attraction>().IncrementUsersAttraction();
+            attractionTime = targetedAttraction.duration;
+            targetedAttraction.IncrementUsersAttraction();
         }
     }
 
     void ExitAttraction()
     {
-        var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        var attraction = gm.GetAttractionById(target);
-        var attractionExit = attraction.Find("Exit");
+        var attractionExit = targetedAttraction.exit;
         if (attractionExit != null)
         {
             myNavMeshAgent.transform.position = attractionExit.transform.position;
             myNavMeshAgent.GetComponent<MeshRenderer>().enabled = true;
             myNavMeshAgent.GetComponent<NavMeshAgent>().enabled = true;
             SetNewDestination();
-            attraction.GetComponent<Attraction>().DecrementUsersAttraction();
+            targetedAttraction.DecrementUsersAttraction();
         }
 
     }
-    void EnqueVisitor()
-    {
-        var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        var attraction = gm.GetAttractionById(target);
-        attraction.GetComponent<Attraction>().Enqueue(this);
-    }
-
-    public void UpdatesAboutQueue(Vector3 newLastPosInQueue)
-    {
-        if (observingQueue)
-        {
-            myNavMeshAgent.SetDestination(newLastPosInQueue);
-        }
-    }
+    void EnqueVisitor() {targetedAttraction.Enqueue(this);}
 
     public void SetPreviousVisitor(Visitors visitor){
         previousVisitor = visitor;
     }
+
+    public void setDestination(Vector3 newDest) { myNavMeshAgent.SetDestination(newDest); }
 }

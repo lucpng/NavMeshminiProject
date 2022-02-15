@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class Patrollers : MonoBehaviour
+public class Wanderers : MonoBehaviour
 {
     NavMeshAgent myNavMeshAgent;
     private bool hasDestination;

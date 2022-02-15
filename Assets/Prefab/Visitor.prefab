@@ -136,7 +136,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   state: 0
-  NBR_ATTRACTION: 3
+  NBR_ATTRACTION: 4
   previousVisitor: {fileID: 0}
 --- !u!54 &5117748726162711431
 Rigidbody:

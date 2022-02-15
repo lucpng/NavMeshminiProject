@@ -8,24 +8,19 @@ public class Attraction : MonoBehaviour
     public int capacity = 1;
     public int users = 0;
     public bool full = false;
-    public AgentsQueue queue;
+    public poiQueue queue;
+    public GameObject entrance;
+    public GameObject exit;
 
-    // Start is called before the first frame update
     void Start()
     {
-        queue = new AgentsQueue();
+        queue = new poiQueue(this);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void AddComingVisitor(Visitors visitor)
     {
         
-    }
-
-    public void AddVisitorArriving(Visitors visitor)
-    {
-        
-        queue.AddArriving(visitor);
+        queue.AddComing(visitor);
     }
 
     public void Enqueue(Visitors visitor)
@@ -44,8 +39,7 @@ public class Attraction : MonoBehaviour
     {
         ++users;
         queue.ReleaseFirst();
-        isFull();
-        
+        isFull();  
     }
 
     public void DecrementUsersAttraction()
@@ -64,6 +58,7 @@ public class Attraction : MonoBehaviour
     {
         return queue.Peek();
     }
+
     public bool QueueIsEmpty()
     {
         return queue.QueueIsEmpty();

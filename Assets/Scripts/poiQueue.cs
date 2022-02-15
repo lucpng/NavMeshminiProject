@@ -2,26 +2,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AgentsQueue
+public class poiQueue
 {
     Queue<Visitors> visitorsInQueue;
-    List<Visitors> visitorsArriving;
+    List<Visitors> comingVisitors;
     Visitors last;
+    Attraction attraction;
 
-    public AgentsQueue()
+    public poiQueue(Attraction owner)
     {
         visitorsInQueue = new Queue<Visitors>();
-        visitorsArriving = new List<Visitors>();
+        comingVisitors = new List<Visitors>();
+        attraction = owner;
     }
 
-    public void AddArriving(Visitors visitor)
+    public void AddComing(Visitors visitor)
     {
-        visitorsArriving.Add(visitor);
+        if(!comingVisitors.Contains(visitor))
+            comingVisitors.Add(visitor);
     }
 
     public void EnqueueArrived(Visitors visitor)
     {
-        visitorsArriving.Remove(visitor);
+
+        comingVisitors.Remove(visitor);
         visitorsInQueue.Enqueue(visitor);
         if (last)
         {
@@ -34,7 +38,21 @@ public class AgentsQueue
 
     private void Notify()
     {
-        visitorsArriving.ForEach(visitor => visitor.UpdatesAboutQueue(last.transform.position));
+        if (visitorsInQueue.Count > 0)
+        {
+            foreach (Visitors v in comingVisitors)
+            {
+                v.setDestination(last.transform.position);
+            }
+        }
+        else
+        {
+            foreach (Visitors v in comingVisitors)
+            {
+                v.setDestination(attraction.entrance.transform.position);
+            }
+
+        }
     }
 
     public Vector3 LastPosInQueue()
@@ -50,7 +68,6 @@ public class AgentsQueue
 
     public bool QueueIsEmpty()
     {
-
         if (visitorsInQueue.Count > 0)
         {
             
@@ -59,9 +76,7 @@ public class AgentsQueue
         else
         {
             return true;
-        }
-
-        
+        } 
     }
 
     public Visitors Peek()
