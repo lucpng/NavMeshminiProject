@@ -11,17 +11,17 @@ public class Visitors : MonoBehaviour
         inAttraction,
     }
     public visitorStates state;
-    NavMeshAgent myNavMeshAgent;
+    NavMeshAgent navMeshAgent;
     private Attraction targetedAttraction;
     private float attractionTime;
     public static int NBR_ATTRACTION = 4;
-    private bool observingQueue = false;
+    private bool isInQueue = false;
     public Visitors previousVisitor;
 
 
     void Start()
     {
-        myNavMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        navMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         SetNewDestination();
         state = visitorStates.walking;
     }
@@ -31,18 +31,17 @@ public class Visitors : MonoBehaviour
         switch (state)
         {
             case visitorStates.walking:
-                if (myNavMeshAgent.pathPending)
+                if (navMeshAgent.pathPending)
                     break;
-
-                if (myNavMeshAgent.remainingDistance < 1)
+                
+                if (distanceToTarget(navMeshAgent.destination) < 2.0f)
                 {
-                   
+                    Debug.Log(distanceToTarget(navMeshAgent.destination));
                     EnqueVisitor();
                     state = visitorStates.inQueue;
                 }
                 break;
             case visitorStates.atAttractionEntrance:
-                observingQueue = false;
                 if (!targetedAttraction.full)
                 {
                     EnterAttraction();
@@ -54,18 +53,18 @@ public class Visitors : MonoBehaviour
                 {
                     if (previousVisitor.state == visitorStates.inAttraction)
                     {
-                        myNavMeshAgent.isStopped = false;
-                        myNavMeshAgent.SetDestination(targetedAttraction.entrance.transform.position);
                         previousVisitor = null;
+                        navMeshAgent.SetDestination(targetedAttraction.entrance.transform.position);
+                        navMeshAgent.isStopped = false; 
                     }
-                    else if (myNavMeshAgent.remainingDistance < 1)
+                    else if (distanceToTarget(previousVisitor.transform.position) < 4.0f)
                     {
-                        myNavMeshAgent.isStopped = true;
+                        navMeshAgent.isStopped = true;
                     }
                     else
                     {
-                        myNavMeshAgent.isStopped = false;
-                        myNavMeshAgent.SetDestination(previousVisitor.transform.position);
+                        navMeshAgent.isStopped = false;
+                        navMeshAgent.SetDestination(previousVisitor.transform.position);
                     }
                 }
                 else
@@ -81,7 +80,6 @@ public class Visitors : MonoBehaviour
                     state = visitorStates.walking;
                 }         
                 break;
-
         }
         
     }
@@ -91,19 +89,6 @@ public class Visitors : MonoBehaviour
         var targetID = Random.Range(0, NBR_ATTRACTION);
         var gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         targetedAttraction = gm.GetAttractionById(targetID).GetComponent<Attraction>();
-        observingQueue = true;
-        if (!targetedAttraction.QueueIsEmpty())
-        {
-            myNavMeshAgent.SetDestination(targetedAttraction.LastPosInQueue());
-        }
-        else
-        {
-            var attractionEntrance = targetedAttraction.entrance;
-            if (attractionEntrance != null)
-            {
-                myNavMeshAgent.SetDestination(attractionEntrance.transform.position);
-            }
-        }
         targetedAttraction.AddComingVisitor(this);
     }
 
@@ -111,8 +96,8 @@ public class Visitors : MonoBehaviour
     {
         if (targetedAttraction != null)
         {
-            myNavMeshAgent.GetComponent<MeshRenderer>().enabled = false;
-            myNavMeshAgent.GetComponent<NavMeshAgent>().enabled = false;
+            navMeshAgent.GetComponent<MeshRenderer>().enabled = false;
+            navMeshAgent.GetComponent<NavMeshAgent>().enabled = false;
             attractionTime = targetedAttraction.duration;
             targetedAttraction.IncrementUsersAttraction();
         }
@@ -120,22 +105,27 @@ public class Visitors : MonoBehaviour
 
     void ExitAttraction()
     {
-        var attractionExit = targetedAttraction.exit;
-        if (attractionExit != null)
-        {
-            myNavMeshAgent.transform.position = attractionExit.transform.position;
-            myNavMeshAgent.GetComponent<MeshRenderer>().enabled = true;
-            myNavMeshAgent.GetComponent<NavMeshAgent>().enabled = true;
-            SetNewDestination();
-            targetedAttraction.DecrementUsersAttraction();
-        }
+        navMeshAgent.transform.position = targetedAttraction.exit.transform.position;
+        navMeshAgent.GetComponent<MeshRenderer>().enabled = true;
+        navMeshAgent.GetComponent<NavMeshAgent>().enabled = true;
+        SetNewDestination();
+        targetedAttraction.DecrementUsersAttraction();
 
     }
     void EnqueVisitor() {targetedAttraction.Enqueue(this);}
 
     public void SetPreviousVisitor(Visitors visitor){
         previousVisitor = visitor;
+        if (previousVisitor)
+        {
+            setDestination(visitor.transform.position);
+        }  
     }
 
-    public void setDestination(Vector3 newDest) { myNavMeshAgent.SetDestination(newDest); }
+    public void setDestination(Vector3 newDest) { navMeshAgent.SetDestination(newDest); }
+
+    public float distanceToTarget(Vector3 targetPosition)
+    {
+        return (targetPosition - this.transform.position).sqrMagnitude;
+    }
 }

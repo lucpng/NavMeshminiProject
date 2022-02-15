@@ -1,13 +1,12 @@
-using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
-using UnityEngine;
+
 
 public class poiQueue
 {
-    Queue<Visitors> visitorsInQueue;
-    List<Visitors> comingVisitors;
-    Visitors last;
-    Attraction attraction;
+    private Queue<Visitors> visitorsInQueue;
+    private List<Visitors> comingVisitors;
+    private Attraction attraction;
 
     public poiQueue(Attraction owner)
     {
@@ -20,19 +19,24 @@ public class poiQueue
     {
         if(!comingVisitors.Contains(visitor))
             comingVisitors.Add(visitor);
+
+        if(visitorsInQueue.Count > 0)
+        {
+            visitor.SetPreviousVisitor(visitorsInQueue.Last());
+        }
+        else
+        {
+            visitor.setDestination(attraction.entrance.transform.position);
+        }
     }
 
     public void EnqueueArrived(Visitors visitor)
     {
+        if (comingVisitors.Contains(visitor))
+            comingVisitors.Remove(visitor);
 
-        comingVisitors.Remove(visitor);
         visitorsInQueue.Enqueue(visitor);
-        if (last)
-        {
-            visitor.SetPreviousVisitor(last);
-        }
-        
-        last = visitor;
+       
         Notify();
     }
 
@@ -42,7 +46,7 @@ public class poiQueue
         {
             foreach (Visitors v in comingVisitors)
             {
-                v.setDestination(last.transform.position);
+                v.SetPreviousVisitor(visitorsInQueue.Last());
             }
         }
         else
@@ -50,20 +54,17 @@ public class poiQueue
             foreach (Visitors v in comingVisitors)
             {
                 v.setDestination(attraction.entrance.transform.position);
+                v.SetPreviousVisitor(null);
             }
 
         }
-    }
-
-    public Vector3 LastPosInQueue()
-    {
-        return last.transform.position;
     }
 
     public void ReleaseFirst()
     {
         if (!QueueIsEmpty())
             visitorsInQueue.Dequeue();
+        Notify();
     }
 
     public bool QueueIsEmpty()

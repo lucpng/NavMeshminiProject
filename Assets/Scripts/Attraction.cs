@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class Attraction : MonoBehaviour
 {
-    public float duration;
+    [Range(0.5f, 20f)]
+    public float duration =1 ;
+    [Range(1, 10)]
     public int capacity = 1;
     public int users = 0;
     public bool full = false;
@@ -47,11 +49,6 @@ public class Attraction : MonoBehaviour
         if (users > 0)
             --users; 
         full = false;
-    }
-
-    public Vector3 LastPosInQueue()
-    {
-        return queue.LastPosInQueue();
     }
 
     public Visitors getFirstInQueue()
