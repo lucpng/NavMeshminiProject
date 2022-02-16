@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Attraction : MonoBehaviour
 {
-    [Range(0.5f, 20f)]
+    [Min(1)]
     public int duration = 1 ;
-    [Range(1, 10)]
+    [Min(1)]
     public int capacity = 1;
     private int users = 0;
     public bool full = false;
