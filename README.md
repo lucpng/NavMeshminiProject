@@ -31,7 +31,7 @@
 
 ## Notes personnelles
 
-**Performance** : (Sur ma relativement puissante machine) +60 FPS jusqu'à 2000 Visitors. (Valeur bien inférieur avec des Wanderers pour des raisons d'implémentation non optimisé comme expliqué plus tôt).
+**Performance** : (Sur ma relativement puissante machine) +60 FPS jusqu'à 2000 Visitors. (Valeur bien inférieure avec des Wanderers pour des raisons d'implémentation non optimisée comme expliqué plus tôt).
 
-**Disclaimer**
+**Disclaimer** :
 Je préfère en parler dans ce ReadMe comme "disclaimer" mais j'ai une parfaite conscience d'avoir un code parfois redondant et sans aucun doute très peu qualitatif ni efficace, je pensais avoir le temps de réaliser un refactoring quasi complet avant le rendu final mais des évènements personnels récents m'en ont empéchés. Pas d'excuse ici, seulement un petit message de prévention.
