@@ -5,18 +5,18 @@ using UnityEngine;
 public class Attraction : MonoBehaviour
 {
     [Range(0.5f, 20f)]
-    public float duration =1 ;
+    public int duration = 1 ;
     [Range(1, 10)]
     public int capacity = 1;
-    public int users = 0;
+    private int users = 0;
     public bool full = false;
-    public poiQueue queue;
+    public PoiQueue queue;
     public GameObject entrance;
     public GameObject exit;
 
     void Start()
     {
-        queue = new poiQueue(this);
+        queue = new PoiQueue(this);
     }
 
     public void AddComingVisitor(Visitors visitor)
@@ -35,10 +35,14 @@ public class Attraction : MonoBehaviour
         {
             full = true;
         }
+        else
+        {
+            full = false;
+        }
         return full;
     }
     public void IncrementUsersAttraction()
-    {
+    {        
         ++users;
         queue.ReleaseFirst();
         isFull();  
@@ -47,17 +51,22 @@ public class Attraction : MonoBehaviour
     public void DecrementUsersAttraction()
     {
         if (users > 0)
-            --users; 
-        full = false;
-    }
-
-    public Visitors getFirstInQueue()
-    {
-        return queue.Peek();
+            --users;
+        isFull();
     }
 
     public bool QueueIsEmpty()
     {
         return queue.QueueIsEmpty();
+    }
+
+    public void UpdateQueueAboutDestroyedAgent(Visitors visitor)
+    {
+        queue.RemoveAndUpdateAllLists(visitor);
+    }
+
+    public bool AmIFirst(Visitors visitor)
+    {
+        return visitor == queue.GetFirst();
     }
 }

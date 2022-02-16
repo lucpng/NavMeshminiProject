@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections.Generic;
 
 public class Visitors : MonoBehaviour
 {
@@ -13,7 +14,6 @@ public class Visitors : MonoBehaviour
     public visitorStates state;
     NavMeshAgent navMeshAgent;
     private Attraction targetedAttraction;
-    private float attractionTime;
     public static int NBR_ATTRACTION = 4;
     public Visitors previousVisitor;
 
@@ -40,7 +40,7 @@ public class Visitors : MonoBehaviour
                 }
                 break;
             case visitorStates.atAttractionEntrance:
-                if (!targetedAttraction.full)
+                if (!targetedAttraction.isFull() && targetedAttraction.AmIFirst(this))
                 {
                     EnterAttraction();
                     state = visitorStates.inAttraction;
@@ -65,18 +65,16 @@ public class Visitors : MonoBehaviour
                         navMeshAgent.SetDestination(previousVisitor.transform.position);
                     }
                 }
-                else
+                else if(targetedAttraction.AmIFirst(this))
                 {
                     state = visitorStates.atAttractionEntrance;
                 }
+                else
+                {
+                    Debug.Log("DEBUG : I have no one in front of me but I am not first !");
+                }
                 break;
             case visitorStates.inAttraction:
-                attractionTime -= Time.deltaTime;
-                if (attractionTime <= 0)
-                {
-                    ExitAttraction();
-                    state = visitorStates.walking;
-                }         
                 break;
         }
         
@@ -96,7 +94,7 @@ public class Visitors : MonoBehaviour
         {
             navMeshAgent.GetComponent<MeshRenderer>().enabled = false;
             navMeshAgent.GetComponent<NavMeshAgent>().enabled = false;
-            attractionTime = targetedAttraction.duration;
+            StartCoroutine(doingAttraction(targetedAttraction.duration));
             targetedAttraction.IncrementUsersAttraction();
         }
     }
@@ -107,6 +105,7 @@ public class Visitors : MonoBehaviour
         navMeshAgent.GetComponent<MeshRenderer>().enabled = true;
         navMeshAgent.GetComponent<NavMeshAgent>().enabled = true;
         SetNewDestination();
+        state = visitorStates.walking;
         targetedAttraction.DecrementUsersAttraction();
 
     }
@@ -125,5 +124,17 @@ public class Visitors : MonoBehaviour
     public float DistanceToTarget(Vector3 targetPosition)
     {
         return (targetPosition - this.transform.position).sqrMagnitude;
+    }
+
+    public void GoingToBeDestroyed()
+    {
+        targetedAttraction.UpdateQueueAboutDestroyedAgent(this);
+    }
+
+    protected IEnumerator<WaitForSeconds> doingAttraction(int attractionTime)
+    {
+        // Function which will execute the lines under this "yield" after visitTime seconds
+        yield return new WaitForSeconds(attractionTime);
+        ExitAttraction();
     }
 }

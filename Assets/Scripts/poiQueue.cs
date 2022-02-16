@@ -2,15 +2,15 @@ using System.Linq;
 using System.Collections.Generic;
 
 
-public class poiQueue
+public class PoiQueue
 {
-    private Queue<Visitors> visitorsInQueue;
+    private List<Visitors> visitorsInQueue;
     private List<Visitors> comingVisitors;
     private Attraction attraction;
 
-    public poiQueue(Attraction owner)
+    public PoiQueue(Attraction owner)
     {
-        visitorsInQueue = new Queue<Visitors>();
+        visitorsInQueue = new List<Visitors>();
         comingVisitors = new List<Visitors>();
         attraction = owner;
     }
@@ -35,9 +35,14 @@ public class poiQueue
         if (comingVisitors.Contains(visitor))
             comingVisitors.Remove(visitor);
 
-        visitorsInQueue.Enqueue(visitor);
+        visitorsInQueue.Add(visitor);
        
         Notify();
+    }
+
+    public Visitors GetFirst()
+    {
+        return visitorsInQueue[0];
     }
 
     private void Notify()
@@ -63,7 +68,7 @@ public class poiQueue
     public void ReleaseFirst()
     {
         if (!QueueIsEmpty())
-            visitorsInQueue.Dequeue();
+            visitorsInQueue.RemoveAt(0);
         Notify();
     }
 
@@ -80,8 +85,20 @@ public class poiQueue
         } 
     }
 
-    public Visitors Peek()
+    public void RemoveAndUpdateAllLists(Visitors visitor)
     {
-        return visitorsInQueue.Peek();
+        if (comingVisitors.Contains(visitor))
+            comingVisitors.Remove(visitor);
+        if (visitorsInQueue.Contains(visitor)){
+            var newPreviousVisitor = visitor.previousVisitor;
+            var nextVisitorId = visitorsInQueue.IndexOf(visitor)+1;
+            if (nextVisitorId >= 0 && nextVisitorId < visitorsInQueue.Count)
+            {
+                visitorsInQueue[nextVisitorId].previousVisitor = newPreviousVisitor;
+            }
+            
+            visitorsInQueue.Remove(visitor);
+        }
+        Notify();
     }
 }
