@@ -26,7 +26,7 @@ public class poiQueue
         }
         else
         {
-            visitor.setDestination(attraction.entrance.transform.position);
+            visitor.SetDestination(attraction.entrance.transform.position);
         }
     }
 
@@ -53,7 +53,7 @@ public class poiQueue
         {
             foreach (Visitors v in comingVisitors)
             {
-                v.setDestination(attraction.entrance.transform.position);
+                v.SetDestination(attraction.entrance.transform.position);
                 v.SetPreviousVisitor(null);
             }
 

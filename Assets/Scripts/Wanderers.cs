@@ -1,49 +1,46 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class Wanderers : MonoBehaviour
 {
-    NavMeshAgent myNavMeshAgent;
-    private bool hasDestination;
+    NavMeshAgent navMeshAgent;
     private NavMeshPath path;
-    public int mode;
 
     void Start()
     {
-        myNavMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        navMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        path = new NavMeshPath();
     }
 
     void Update()
     {
-        /*if (Input.GetMouseButtonDown(0))
+
+        if (!navMeshAgent.hasPath)
         {
-            SetDestinationToMousePosition();
-        }*/
-        if (!myNavMeshAgent.hasPath)
-        {
-            SetDestinationRandom();
+            for(uint i =0; i < 10; ++i)
+            {
+                if (SetDestinationRandom())
+                {
+                    break;
+                };
+            } 
         }
         
-
     }
 
-    void SetDestinationRandom()
+    bool SetDestinationRandom()
     {
-        Vector3 newDestination = new Vector3(Random.Range(0.0f, 95.0f), 0.0f, Random.Range(0.0f, 95.0f));
-        newDestination.y = Terrain.activeTerrain.SampleHeight(newDestination);
-        //Debug.Log("newDestination : " + newDestination);
-        myNavMeshAgent.SetDestination(newDestination);
-    }
-
-    /*void SetDestinationToMousePosition()
-    {
-        RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out hit))
+        Vector3 newDestination = new Vector3(Random.Range(0.0f, GameManager.terrainSize.x), 0.0f, Random.Range(0.0f, GameManager.terrainSize.y));
+        
+        NavMeshHit hit;
+        NavMesh.SamplePosition(newDestination, out hit, float.PositiveInfinity, NavMesh.AllAreas);
+        NavMesh.CalculatePath(this.transform.position, hit.position, NavMesh.AllAreas, path);
+        if(path.status == NavMeshPathStatus.PathComplete)
         {
-            myNavMeshAgent.SetDestination(hit.point);
+            navMeshAgent.SetDestination(newDestination);
+            return true;
         }
-    }*/
+        return false;
+        
+    }
 }

@@ -36,5 +36,13 @@ public class CameraController : MonoBehaviour
         if (Input.GetMouseButton(1)) {
             Camera.main.transform.position = resetCamera;
         }
+
+        ZoomInOut();
+    }
+
+    void ZoomInOut()
+    {
+        Camera.main.orthographicSize = Mathf.Max(Mathf.Min(100.0f, Camera.main.orthographicSize + 2.0f * (-Input.mouseScrollDelta.y)), 2f);
     }
 }
+

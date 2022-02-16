@@ -15,7 +15,6 @@ public class Visitors : MonoBehaviour
     private Attraction targetedAttraction;
     private float attractionTime;
     public static int NBR_ATTRACTION = 4;
-    private bool isInQueue = false;
     public Visitors previousVisitor;
 
 
@@ -34,9 +33,8 @@ public class Visitors : MonoBehaviour
                 if (navMeshAgent.pathPending)
                     break;
                 
-                if (distanceToTarget(navMeshAgent.destination) < 2.0f)
+                if (DistanceToTarget(navMeshAgent.destination) < 2.0f)
                 {
-                    Debug.Log(distanceToTarget(navMeshAgent.destination));
                     EnqueVisitor();
                     state = visitorStates.inQueue;
                 }
@@ -57,7 +55,7 @@ public class Visitors : MonoBehaviour
                         navMeshAgent.SetDestination(targetedAttraction.entrance.transform.position);
                         navMeshAgent.isStopped = false; 
                     }
-                    else if (distanceToTarget(previousVisitor.transform.position) < 4.0f)
+                    else if (DistanceToTarget(previousVisitor.transform.position) < 4.0f)
                     {
                         navMeshAgent.isStopped = true;
                     }
@@ -118,13 +116,13 @@ public class Visitors : MonoBehaviour
         previousVisitor = visitor;
         if (previousVisitor)
         {
-            setDestination(visitor.transform.position);
+            SetDestination(visitor.transform.position);
         }  
     }
 
-    public void setDestination(Vector3 newDest) { navMeshAgent.SetDestination(newDest); }
+    public void SetDestination(Vector3 newDest) { navMeshAgent.SetDestination(newDest); }
 
-    public float distanceToTarget(Vector3 targetPosition)
+    public float DistanceToTarget(Vector3 targetPosition)
     {
         return (targetPosition - this.transform.position).sqrMagnitude;
     }
